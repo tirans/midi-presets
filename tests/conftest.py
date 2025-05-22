@@ -1,8 +1,12 @@
 import pytest
 import tempfile
 import json
+import sys
 from pathlib import Path
 from datetime import datetime
+
+# Add src to Python path
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 @pytest.fixture
 def temp_dir():
@@ -84,14 +88,14 @@ def devices_folder(temp_dir, sample_device_data):
     """Create a test devices folder structure"""
     devices_dir = temp_dir / "devices"
     devices_dir.mkdir()
-    
+
     # Create test device
     test_device_dir = devices_dir / "test_device"
     test_device_dir.mkdir()
-    
+
     # Create factory.json
     factory_file = test_device_dir / "factory.json"
     with open(factory_file, 'w') as f:
         json.dump(sample_device_data, f, indent=2)
-    
+
     return devices_dir

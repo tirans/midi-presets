@@ -7,12 +7,12 @@ from ..utils.logging import get_logger
 logger = get_logger('models.preset')
 
 class PresetMetadataModel(BaseMetadataModel):
-    version: str = Field(..., regex=r'^\d+\.\d+$')
+    version: str = Field(..., pattern=r'^\d+\.\d+$')
     validation_status: ValidationStatus
     source: str = Field(..., min_length=1, max_length=50)
     derived_from: Optional[str] = None
     midi_learn_source: Optional[str] = None
-    
+
     def __init__(self, **data):
         logger.debug(
             "Initializing PresetMetadataModel",
@@ -36,7 +36,7 @@ class PresetModel(BaseModel):
     performance_notes: Optional[str] = Field("", max_length=500)
     user_ratings: Dict[str, Any] = Field(default_factory=dict)
     usage_stats: Dict[str, Any] = Field(default_factory=dict)
-    
+
     def __init__(self, **data):
         logger.debug(
             "Initializing PresetModel",
@@ -49,7 +49,7 @@ class PresetModel(BaseModel):
             }
         )
         super().__init__(**data)
-        
+
         logger.info(
             f"Created preset: {self.preset_name}",
             extra={
@@ -64,7 +64,7 @@ class PresetModel(BaseModel):
                 'has_usage_stats': bool(self.usage_stats)
             }
         )
-    
+
     @validator('preset_name')
     def validate_preset_name(cls, v):
         logger.debug(f"Validating preset name: {v}")
@@ -76,7 +76,7 @@ class PresetModel(BaseModel):
             )
             raise ValueError(f'Preset name contains invalid characters: {invalid_chars}')
         return v
-    
+
     @validator('sendmidi_command')
     def validate_sendmidi_command(cls, v):
         logger.debug(f"Validating sendmidi command: {v[:50]}...")
@@ -87,7 +87,7 @@ class PresetModel(BaseModel):
             )
             raise ValueError('Command must start with "sendmidi"')
         return v
-    
+
     @validator('preset_id')
     def validate_preset_id(cls, v):
         logger.debug(f"Validating preset ID: {v}")
@@ -98,7 +98,7 @@ class PresetModel(BaseModel):
             )
             raise ValueError('Preset ID must be alphanumeric with underscores/hyphens only')
         return v
-    
+
     @validator('pgm')
     def validate_program_number(cls, v):
         logger.debug(f"Validating program number: {v}")
@@ -108,7 +108,7 @@ class PresetModel(BaseModel):
                 extra={'pgm': v}
             )
         return v
-    
+
     @validator('cc_0')
     def validate_control_change(cls, v):
         if v is not None:

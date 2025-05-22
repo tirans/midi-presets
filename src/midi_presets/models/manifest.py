@@ -8,7 +8,7 @@ from ..utils.logging import get_logger
 logger = get_logger('models.manifest')
 
 class FileChecksumModel(BaseModel):
-    sha256: str = Field(..., regex=r'^[a-f0-9]{64}$')
+    sha256: str = Field(..., pattern=r'^[a-f0-9]{64}$')
     size_bytes: int = Field(..., ge=0)
     last_modified: datetime
     schema_version: str
@@ -16,7 +16,7 @@ class FileChecksumModel(BaseModel):
     preset_count: int = Field(..., ge=0)
     validation_status: ValidationStatus
     contributor: Optional[str] = None
-    
+
     def __init__(self, **data):
         logger.debug(
             "Initializing FileChecksumModel",
@@ -35,9 +35,9 @@ class RepositoryManifestModel(BaseModel):
     _repository_metadata: Dict[str, Any]
     file_checksums: Dict[str, FileChecksumModel]
     folder_checksums: Dict[str, str]
-    repository_checksum: str = Field(..., regex=r'^[a-f0-9]{64}$')
+    repository_checksum: str = Field(..., pattern=r'^[a-f0-9]{64}$')
     statistics: Dict[str, Any]
-    
+
     def __init__(self, **data):
         logger.info(
             "Initializing RepositoryManifestModel",
@@ -47,13 +47,13 @@ class RepositoryManifestModel(BaseModel):
                 'repository_checksum': data.get('repository_checksum', '')[:16] + '...'
             }
         )
-        
+
         super().__init__(**data)
-        
+
         # Log repository statistics
         stats = self.statistics
         repo_meta = self._repository_metadata
-        
+
         logger.info(
             "Repository manifest loaded successfully",
             extra={
@@ -68,14 +68,14 @@ class RepositoryManifestModel(BaseModel):
                 'schema_distribution': stats.get('schema_version_distribution', {})
             }
         )
-    
+
     @validator('folder_checksums')
     def validate_folder_checksums(cls, v):
         logger.debug(f"Validating {len(v)} folder checksums")
-        
+
         sha256_pattern = r'^[a-f0-9]{64}$'
         invalid_checksums = []
-        
+
         for folder, checksum in v.items():
             if not re.match(sha256_pattern, checksum):
                 invalid_checksums.append((folder, checksum))
@@ -83,30 +83,30 @@ class RepositoryManifestModel(BaseModel):
                     f"Invalid checksum format for folder",
                     extra={'folder': folder, 'checksum': checksum[:16] + '...'}
                 )
-        
+
         if invalid_checksums:
             raise ValueError(f'Invalid checksum formats found for folders: {[f[0] for f in invalid_checksums]}')
-        
+
         logger.info(f"All {len(v)} folder checksums validated successfully")
         return v
-    
+
     @validator('repository_checksum')
     def validate_repository_checksum(cls, v):
         logger.debug(f"Validating repository checksum: {v[:16]}...")
         return v
-    
+
     def get_file_by_checksum(self, checksum: str) -> Optional[str]:
         """Find file by its checksum"""
         logger.debug(f"Searching for file with checksum: {checksum[:16]}...")
-        
+
         for file_path, file_info in self.file_checksums.items():
             if file_info.sha256 == checksum:
                 logger.info(f"Found file: {file_path}")
                 return file_path
-        
+
         logger.warning(f"No file found with checksum: {checksum[:16]}...")
         return None
-    
+
     def get_validation_summary(self) -> Dict[str, int]:
         """Get validation status summary"""
         summary = self.statistics.get('validation_summary', {})

@@ -8,13 +8,13 @@ from ..utils.logging import get_logger
 logger = get_logger('models.device')
 
 class FileMetadataModel(BaseMetadataModel):
-    schema_version: str = Field(..., regex=r'^\d+\.\d+\.\d+$')
+    schema_version: str = Field(..., pattern=r'^\d+\.\d+\.\d+$')
     file_revision: int = Field(..., ge=1)
     created_by: str = Field(..., min_length=1, max_length=100)
     modified_by: str = Field(..., min_length=1, max_length=100)
     migration_path: List[str] = Field(default_factory=list)
     compatibility: Dict[str, Any] = Field(default_factory=dict)
-    
+
     def __init__(self, **data):
         logger.debug(
             "Initializing FileMetadataModel",
@@ -26,7 +26,7 @@ class FileMetadataModel(BaseMetadataModel):
             }
         )
         super().__init__(**data)
-        
+
         if self.migration_path:
             logger.info(
                 f"File has migration path with {len(self.migration_path)} versions",
@@ -45,7 +45,7 @@ class DeviceInfoModel(BaseModel):
     ports: List[str] = Field(default_factory=lambda: ["IN", "OUT"])
     midi_channels: Dict[str, int]
     midi_ports: Dict[str, str]
-    
+
     def __init__(self, **data):
         logger.debug(
             "Initializing DeviceInfoModel",
@@ -58,7 +58,7 @@ class DeviceInfoModel(BaseModel):
             }
         )
         super().__init__(**data)
-        
+
         logger.info(
             f"Created device info for {self.name} v{self.version} by {self.manufacturer}",
             extra={
@@ -69,7 +69,7 @@ class DeviceInfoModel(BaseModel):
                 'midi_channels': self.midi_channels
             }
         )
-    
+
     @validator('name')
     def validate_device_name(cls, v):
         logger.debug(f"Validating device name: {v}")
@@ -87,7 +87,7 @@ class DeviceModel(BaseModel):
     device_info: DeviceInfoModel
     capabilities: Dict[str, Any] = Field(default_factory=dict)
     preset_collections: Dict[str, PresetCollectionModel] = Field(..., min_items=1)
-    
+
     def __init__(self, **data):
         logger.info(
             "Initializing DeviceModel",
@@ -98,13 +98,13 @@ class DeviceModel(BaseModel):
             }
         )
         super().__init__(**data)
-        
+
         # Log device summary
         total_presets = sum(
             len(collection.presets) 
             for collection in self.preset_collections.values()
         )
-        
+
         logger.info(
             f"Device model created successfully",
             extra={
@@ -117,15 +117,15 @@ class DeviceModel(BaseModel):
                 'collection_names': list(self.preset_collections.keys())
             }
         )
-    
+
     @validator('preset_collections')
     def validate_preset_collections(cls, v):
         logger.debug(f"Validating {len(v)} preset collections")
-        
+
         if not v:
             logger.error("No preset collections found")
             raise ValueError('At least one preset collection is required')
-        
+
         for collection_name in v.keys():
             logger.debug(f"Validating collection name: {collection_name}")
             if not collection_name.replace('_', '').replace('-', '').isalnum():
@@ -134,13 +134,13 @@ class DeviceModel(BaseModel):
                     extra={'collection_name': collection_name}
                 )
                 raise ValueError(f'Collection name "{collection_name}" contains invalid characters')
-        
+
         logger.info(
             "All preset collections validated successfully",
             extra={'collection_names': list(v.keys())}
         )
         return v
-    
+
     class Config:
-        extra = "forbid"
+        extra = "allow"
         validate_all = True
