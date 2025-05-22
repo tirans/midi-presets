@@ -11,27 +11,39 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: [3.9, 3.10, 3.11] # Test across multiple Python versions
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history for changed files detection
+          fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e .
           pip install -e .[dev]
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@v35
+        uses: tj-actions/changed-files@v44
         with:
           files: |
             devices/**/*.json
@@ -43,29 +55,35 @@ jobs:
           echo "${{ steps.changed-files.outputs.all_changed_files }}"
           python scripts/validate_presets.py ${{ steps.changed-files.outputs.all_changed_files }}
 
-      - name: Validate path restrictions
+      - name: Validate path restrictions and file size
         if: steps.changed-files.outputs.all_changed_files != ''
         run: |
           echo "Checking path restrictions..."
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             # Ensure file is under devices/ directory
             if [[ ! $file =~ ^devices/ ]]; then
-              echo "❌ Error: File $file is not under the devices/ directory"
+              echo "::error file=$file::File is not under the devices/ directory"
               exit 1
             fi
-            
             # Check directory depth (max 4 levels under devices/)
-            depth=$(echo $file | tr -cd '/' | wc -c)
-            if [[ $depth -gt 5 ]]; then  # devices/ + 4 more levels = 5 slashes max
-              echo "❌ Error: File $file exceeds maximum directory depth (4 levels under devices/)"
+            depth=$(awk -F"/" '{print NF-1}' <<< "$file")
+            if [[ $depth -gt 5 ]]; then
+              echo "::error file=$file::File exceeds maximum directory depth (4 levels under devices/)"
               exit 1
             fi
-            
             # Check file size (max 3MB)
             size=$(du -m "$file" | cut -f1)
             if [[ $size -gt 3 ]]; then
-              echo "❌ Error: File $file exceeds maximum file size (3MB)"
+              echo "::error file=$file::File exceeds maximum file size (3MB)"
               exit 1
             fi
           done
           echo "✅ All files passed path and size restrictions"
+
+      - name: Run tests
+        run: |
+          if [ -f pytest.ini ] || [ -f pyproject.toml ] || [ -d tests ]; then
+            pytest --maxfail=1 --disable-warnings
+          else
+            echo "No tests directory found, skipping tests."
+          fi
