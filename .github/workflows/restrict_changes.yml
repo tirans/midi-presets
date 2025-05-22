@@ -21,29 +21,35 @@ jobs:
         run: |
           echo "Checking for unauthorized changes..."
           UNAUTHORIZED_CHANGES=false
-          
+
           # Loop through all changed files
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            # Skip files in the devices directory
+            # Check files in the devices directory - only allow authenticated users
             if [[ $file =~ ^devices/ ]]; then
-              echo "✅ Authorized change: $file"
+              # Check if the user is authenticated (not anonymous)
+              if [[ "${{ github.actor }}" == "anonymous" ]]; then
+                echo "❌ Unauthorized change to devices/: $file (anonymous user)"
+                UNAUTHORIZED_CHANGES=true
+                continue
+              fi
+              echo "✅ Authorized change to devices/: $file (authenticated user)"
               continue
             fi
-            
-            # Check if the user is a repository maintainer
+
+            # For files outside devices/, check if the user is a repository maintainer
             if [[ "${{ github.actor }}" == "maintainer1" || "${{ github.actor }}" == "maintainer2" ]]; then
               echo "⚠️ Maintainer change outside devices/: $file (allowed)"
               continue
             fi
-            
+
             # Unauthorized change
             echo "❌ Unauthorized change outside devices/: $file"
             UNAUTHORIZED_CHANGES=true
           done
-          
+
           if [[ "$UNAUTHORIZED_CHANGES" == "true" ]]; then
-            echo "::error::Pull request contains unauthorized changes outside the devices/ directory"
+            echo "::error::Pull request contains unauthorized changes. Only authenticated users can modify the devices/ directory, and only maintainers can modify files outside the devices/ directory."
             exit 1
           fi
-          
+
           echo "✅ All changes are authorized"
