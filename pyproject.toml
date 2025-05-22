@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "midi-device-presets"
+version = "2.1.0"
+description = "A comprehensive system for managing MIDI device presets"
+authors = [{name = "tirans"}]
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers", 
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+]
+
+dependencies = [
+    "pydantic[email]>=2.5.0",
+    "python-dateutil>=2.8.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.7.0", 
+    "flake8>=6.0.0",
+    "mypy>=1.5.0",
+]
+
+[project.scripts]
+validate-presets = "midi_presets.cli.validate:ValidationCLI.run"
+generate-checksums = "midi_presets.cli.checksum:ChecksumCLI.run"
+
+[tool.black]
+line-length = 100
+target-version = ["py38", "py39", "py310", "py311"]
+
+[tool.mypy]
+python_version = "3.8"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--cov=src/midi_presets",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+]

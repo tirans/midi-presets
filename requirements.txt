@@ -1,0 +1,3 @@
+# Production dependencies
+pydantic[email]==2.5.0
+python-dateutil==2.8.2

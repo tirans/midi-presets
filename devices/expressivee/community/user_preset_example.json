@@ -1,0 +1,73 @@
+{
+  "_metadata": {
+    "schema_version": "3.1.0",
+    "file_revision": 1,
+    "created_date": "2024-05-01T00:00:00Z",
+    "modified_date": "2024-05-01T00:00:00Z", 
+    "created_by": "example_user",
+    "modified_by": "example_user",
+    "migration_path": [],
+    "compatibility": {
+      "min_app_version": "2.1.0"
+    }
+  },
+  "device_info": {
+    "name": "Example MIDI Device",
+    "version": "1.0.0",
+    "manufacturer": "Example Manufacturer", 
+    "manufacturer_id": 42,
+    "device_id": 1,
+    "ports": ["IN", "OUT"],
+    "midi_channels": {
+      "IN": 1,
+      "OUT": 1
+    },
+    "midi_ports": {
+      "IN": "Example Device IN",
+      "OUT": "Example Device OUT"
+    }
+  },
+  "capabilities": {},
+  "preset_collections": {
+    "my_custom_presets": {
+      "metadata": {
+        "name": "My Custom Presets",
+        "version": "1.0",
+        "revision": 1,
+        "created_date": "2024-05-01T00:00:00Z",
+        "modified_date": "2024-05-01T00:00:00Z",
+        "author": "example_user",
+        "description": "Custom presets created by user",
+        "readonly": false,
+        "preset_count": 1,
+        "parent_collections": [],
+        "sync_status": "synced"
+      },
+      "presets": [
+        {
+          "preset_id": "user_custom_001",
+          "cc_0": 10,
+          "pgm": 64,
+          "category": "bass",
+          "preset_name": "My Custom Bass",
+          "sendmidi_command": "sendmidi dev \"Example Device OUT\" cc 0 10 pc 64",
+          "characters": ["deep", "punchy", "custom"],
+          "performance_notes": "Perfect for funk basslines",
+          "user_ratings": {"warmth": 8, "punch": 9},
+          "usage_stats": {"times_used": 15, "last_used": "2024-05-01T10:00:00Z"}
+        }
+      ],
+      "preset_metadata": {
+        "user_custom_001": {
+          "version": "1.0",
+          "created_date": "2024-05-01T00:00:00Z", 
+          "modified_date": "2024-05-01T00:00:00Z",
+          "validation_status": "user_verified",
+          "source": "midi_learn",
+          "derived_from": null,
+          "midi_learn_source": "captured_from_hardware"
+        }
+      }
+    }
+  }
+}
