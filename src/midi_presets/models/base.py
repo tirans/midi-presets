@@ -23,7 +23,7 @@ class BaseMetadataModel(BaseModel):
     """Base class for all metadata models"""
     created_date: datetime
     modified_date: datetime
-    
+
     def __init__(self, **data):
         logger.debug(
             "Initializing BaseMetadataModel",
@@ -33,7 +33,7 @@ class BaseMetadataModel(BaseModel):
             }
         )
         super().__init__(**data)
-        
+
         # Log validation of dates
         if self.created_date > self.modified_date:
             logger.warning(
@@ -43,7 +43,7 @@ class BaseMetadataModel(BaseModel):
                     'modified_date': self.modified_date.isoformat()
                 }
             )
-    
+
     class Config:
-        validate_all = True
+        validate_default = True
         extra = "forbid"

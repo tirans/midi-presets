@@ -83,7 +83,7 @@ class DeviceInfoModel(BaseModel):
         return v
 
 class DeviceModel(BaseModel):
-    _metadata: FileMetadataModel
+    file_metadata: FileMetadataModel = Field(alias="_metadata")
     device_info: DeviceInfoModel
     capabilities: Dict[str, Any] = Field(default_factory=dict)
     preset_collections: Dict[str, PresetCollectionModel] = Field(..., min_items=1)
@@ -110,8 +110,8 @@ class DeviceModel(BaseModel):
             extra={
                 'device_name': self.device_info.name,
                 'manufacturer': self.device_info.manufacturer,
-                'schema_version': self._metadata.schema_version,
-                'file_revision': self._metadata.file_revision,
+                'schema_version': self.file_metadata.schema_version,
+                'file_revision': self.file_metadata.file_revision,
                 'total_collections': len(self.preset_collections),
                 'total_presets': total_presets,
                 'collection_names': list(self.preset_collections.keys())
@@ -143,4 +143,4 @@ class DeviceModel(BaseModel):
 
     class Config:
         extra = "allow"
-        validate_all = True
+        validate_default = True
