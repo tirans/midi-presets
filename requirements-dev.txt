@@ -1,6 +1,6 @@
 # Production dependencies
 pydantic[email]==2.5.0
-python-dateutil==2.8.2
+python-dateutil==2.9.0.post0
 
 # Development dependencies
 pytest==7.4.4
